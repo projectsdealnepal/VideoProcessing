@@ -20,8 +20,5 @@ torchaudio==2.5.1+cu118 # via -r test_req.in
 torchvision==0.20.1+cu118 # via -r test_req.in
 typing-extensions==4.12.2 # via torch
 
-# Detectron2
-detectron2 @ git+https://github.com/facebookresearch/detectron2.git
-
 # System dependencies (to be installed separately via apt)
 # sudo apt install ffmpeg

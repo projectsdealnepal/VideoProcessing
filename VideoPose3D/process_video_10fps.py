@@ -80,7 +80,7 @@ def process_video(video_path, output_dir, detectron_cfg, checkpoint):
 
     # Move the file after the script has finished
     shutil.move(source_file_path, destination_file_path)
-    
+    output_dir = output_dir
     # Step 3: Rendering the custom video and exporting coordinates
     print("Step 3: Rendering video...")
     run_command(
@@ -91,12 +91,21 @@ def process_video(video_path, output_dir, detectron_cfg, checkpoint):
         f"--viz-action custom --viz-camera 0 "
         f"--viz-video {temp_video_path} "
         f"--viz-output {final_output_video} "
-        f"--viz-size 6"
+        f"--viz-size 6 "
+        f"--output-dir {output_dir} "
     )
     
     # Clean up temporary file
     if os.path.exists(temp_video_path):
         os.remove(temp_video_path)
+    if os.path.exists(detectron_output):
+        npz_file = os.path.join(detectron_output, f"{video_base_name}.mp4.npz")
+        os.remove(npz_file)
+    if os.path.exists(destination_dir):
+        npz_file_name_to_delete = os.path.join(destination_dir, npz_file_name)
+        os.remove(npz_file_name_to_delete)
+    
+    
     
     # Record the end time and calculate elapsed time
     end_time = time.time()
@@ -110,7 +119,7 @@ if __name__ == "__main__":
         "video", type=str, help="Path to the input video file."
     )
     parser.add_argument(
-        "--output-dir", type=str, default="outputs", help="Directory to save outputs."
+        "--output-dir", type=str, default="output", help="Directory to save outputs."
     )
     parser.add_argument(
         "--detectron-cfg", type=str, default="COCO-Keypoints/keypoint_rcnn_R_101_FPN_3x.yaml",

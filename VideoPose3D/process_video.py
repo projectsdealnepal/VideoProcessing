@@ -79,8 +79,16 @@ def process_video(video_path, output_dir, detectron_cfg, checkpoint):
         f"--viz-action custom --viz-camera 0 "
         f"--viz-video {video_path} "
         f"--viz-output {final_output_video} "
-        f"--viz-size 6"
+        f"--viz-size 6 "
+        f"--output-dir {output_dir} "
     )
+    # Clean up temporary file
+    if os.path.exists(detectron_output):
+        npz_file = os.path.join(detectron_output, f"{video_base_name}.mp4.npz")
+        os.remove(npz_file)
+    if os.path.exists(destination_dir):
+        npz_file_name_to_delete = os.path.join(destination_dir, npz_file_name)
+        os.remove(npz_file_name_to_delete)
     
     # Record the end time and calculate elapsed time
     end_time = time.time()
