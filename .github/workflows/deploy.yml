@@ -23,23 +23,37 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-
     # Step 3: Build and push Docker image to ECR
     - name: Build and Push Docker image
       env:
         ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-        ECR_REPOSITORY: videoprocessing/ergorisk
+        ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
+        cd VideoPose3D  # Change to VideoPose3D directory for Docker build
         docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
         docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-    # Step 4: Deploy to ECS
+    # Step 4: Process task definition
+    - name: Process task definition
+      id: task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: .aws/task-definition.json
+        container-name: videopose3d-container
+        image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+        environment-variables: |
+          SQS_QUEUE_URL=${{ secrets.SQS_QUEUE_URL }}
+          INPUT_S3_BUCKET=${{ secrets.INPUT_S3_BUCKET }}
+          OUTPUT_S3_BUCKET=${{ secrets.OUTPUT_S3_BUCKET }}
+          AWS_DEFAULT_REGION=${{ secrets.AWS_REGION }}
+
+    # Step 5: Deploy to ECS
     - name: Deploy to ECS
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
-        task-definition: my-task-definition.json
-        service: my-ecs-service
-        cluster: my-ecs-cluster
+        task-definition: ${{ steps.task-def.outputs.task-definition }}
+        service: videopose3d-service
+        cluster: video_processing
         wait-for-service-stability: true
