@@ -20,8 +20,5 @@ pillow==11.1.0          # via torchvision
 sympy==1.13.1           # via torch
 typing-extensions==4.12.2 # via torch
 
-# Detectron2
-detectron2 @ git+https://github.com/facebookresearch/detectron2.git
-
 # System dependencies (to be installed separately via apt)
 # sudo apt install ffmpeg

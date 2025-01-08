@@ -25,7 +25,7 @@ from time import time
 from common.utils import deterministic_random
 
 args = parse_args()
-print(args)
+# print(args)
 
 try:
     # Create checkpoint directory if it does not exist
@@ -44,7 +44,7 @@ elif args.dataset.startswith('humaneva'):
     dataset = HumanEvaDataset(dataset_path)
 elif args.dataset.startswith('custom'):
     from common.custom_dataset import CustomDataset
-    dataset = CustomDataset('output/custom_data/data_2d_' + args.dataset + '_' + args.keypoints + '.npz')
+    dataset = CustomDataset(f'{args.output_dir}/custom_data/data_2d_' + args.dataset + '_' + args.keypoints + '.npz')
 else:
     raise KeyError('Invalid dataset')
 
@@ -62,7 +62,7 @@ for subject in dataset.subjects():
             anim['positions_3d'] = positions_3d
 
 print('Loading 2D detections...')
-keypoints = np.load('output/custom_data/data_2d_' + args.dataset + '_' + args.keypoints + '.npz', allow_pickle=True)
+keypoints = np.load(f'{args.output_dir}/custom_data/data_2d_' + args.dataset + '_' + args.keypoints + '.npz', allow_pickle=True)
 keypoints_metadata = keypoints['metadata'].item()
 keypoints_symmetry = keypoints_metadata['keypoints_symmetry']
 kps_left, kps_right = list(keypoints_symmetry[0]), list(keypoints_symmetry[1])
@@ -911,9 +911,9 @@ if args.render:
         },
         "reba_angles": reba_analysis_results
     }
-    json_directory = 'output/json_data'
+    json_directory = f'{args.output_dir}/json_data'
     os.makedirs(json_directory, exist_ok=True)
-    json_file_name = os.path.join(f'output/json_data/{os.path.splitext(os.path.basename(args.viz_subject))[0]}')
+    json_file_name = os.path.join(f'{args.output_dir}/json_data/{os.path.splitext(os.path.basename(args.viz_subject))[0]}')
     json_output_path = os.path.join(f'{json_file_name}_analysis.json')
     with open(json_output_path, 'w') as json_file:
         json.dump(final_output, json_file, indent=4)
