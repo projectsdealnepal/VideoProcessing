@@ -21,7 +21,7 @@ RUN pip install --upgrade pip
 # Copy requirements first to leverage Docker cache
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-
+RUN python -m pip install 'git+https://github.com/facebookresearch/detectron2.git'
 # Install AWS SDK
 RUN pip install --no-cache-dir boto3
 
