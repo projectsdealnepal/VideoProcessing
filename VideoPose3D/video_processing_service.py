@@ -7,6 +7,8 @@ import subprocess
 import tempfile
 import sys
 from pathlib import Path
+import signal
+import time
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -18,10 +20,16 @@ class VideoProcessingService:
         self.sqs = boto3.client('sqs')
         self.s3 = boto3.client('s3')
         
-        # Get environment variables
-        self.queue_url = os.environ['SQS_QUEUE_URL']
-        self.input_bucket = os.environ['INPUT_S3_BUCKET']
-        self.output_bucket = os.environ['OUTPUT_S3_BUCKET']
+        # Get environment variables with defaults
+        self.queue_url = os.environ.get('SQS_QUEUE_URL')
+        self.input_bucket = os.environ.get('INPUT_S3_BUCKET')
+        self.output_bucket = os.environ.get('OUTPUT_S3_BUCKET')
+        
+        if not all([self.queue_url, self.input_bucket, self.output_bucket]):
+            raise ValueError("Missing required environment variables")
+        
+        # Flag for graceful shutdown
+        self.running = True
         
         # Add the current directory to Python path to import process_video
         current_dir = Path(__file__).parent.absolute()
@@ -111,7 +119,20 @@ class VideoProcessingService:
     def run(self):
         """Main service loop"""
         logger.info("Starting video processing service...")
-        while True:
+        
+        # Check initial connectivity
+        try:
+            self.sqs.get_queue_attributes(
+                QueueUrl=self.queue_url,
+                AttributeNames=['QueueArn']
+            )
+            self.s3.head_bucket(Bucket=self.input_bucket)
+            self.s3.head_bucket(Bucket=self.output_bucket)
+        except Exception as e:
+            logger.error(f"Failed to connect to AWS services: {e}")
+            raise
+
+        while self.running:
             try:
                 # Receive messages from SQS
                 response = self.sqs.receive_message(
@@ -134,10 +155,26 @@ class VideoProcessingService:
                         logger.info("Successfully processed and deleted message")
                     else:
                         logger.error("Failed to process message")
+                        # Optionally move to DLQ or retry queue here
 
             except Exception as e:
                 logger.error(f"Error in main loop: {e}")
+                # Add a small delay before retrying to prevent tight error loops
+                time.sleep(1)
+
+    def shutdown(self):
+        """Graceful shutdown handler"""
+        logger.info("Shutting down service...")
+        self.running = False
 
 if __name__ == "__main__":
     service = VideoProcessingService()
+    
+    # Set up signal handlers for graceful shutdown
+    def signal_handler(signum, frame):
+        service.shutdown()
+    
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+    
     service.run()

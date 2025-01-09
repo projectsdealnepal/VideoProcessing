@@ -3,8 +3,6 @@
 #
 # pip-compile test_req.in
 
---extra-index-url https://download.pytorch.org/whl/cu118
-
 # Core dependencies
 torch==2.5.1+cu118      # via -r test_req.in, torchaudio, torchvision
 torchaudio==2.5.1+cu118 # via -r test_req.in
@@ -19,6 +17,6 @@ numpy==2.0.2            # via torchvision
 pillow==11.1.0          # via torchvision
 sympy==1.13.1           # via torch
 typing-extensions==4.12.2 # via torch
-python -m pip install 'git+https://github.com/facebookresearch/detectron2.git'
+
 # System dependencies (to be installed separately via apt)
 # sudo apt install ffmpeg
