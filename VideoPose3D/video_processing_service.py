@@ -7,18 +7,24 @@ import subprocess
 import tempfile
 import sys
 from pathlib import Path
-import signal
-import time
+from dotenv import load_dotenv
 
+load_dotenv()
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class VideoProcessingService:
     def __init__(self):
-        # Initialize AWS clients
-        self.sqs = boto3.client('sqs')
-        self.s3 = boto3.client('s3')
+        # InitializeREGION AWS clients
+        # print(os.environ.get("AWS_ACCESS_KEY_ID"))
+        # print(os.environ.get("AWS_SECRET_ACCESS_KEY"))
+        self.sqs = boto3.client('sqs', region_name=os.environ['AWS_DEFAULT_REGION'],
+                                        aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+                                        aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'])
+        self.s3 = boto3.client('s3',    region_name=os.environ['AWS_DEFAULT_REGION'],
+                                        aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+                                        aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'])
         
         # Get environment variables with defaults
         self.queue_url = os.environ.get('SQS_QUEUE_URL')
@@ -37,8 +43,8 @@ class VideoProcessingService:
         
         # Import process_video module
         try:
-            import process_video
-            self.process_video_module = process_video
+            import process_video_10fps
+            self.process_video_module = process_video_10fps
             logger.info("Successfully imported process_video module")
         except ImportError as e:
             logger.error(f"Failed to import process_video module: {e}")
@@ -73,9 +79,9 @@ class VideoProcessingService:
                 input_path,
                 '--output-dir', output_dir
             ]
-            
+            print(input_path, output_dir)
             # Call the main function of process_video
-            self.process_video_module.main()
+            self.process_video_module.process_video(input_path, output_dir, "COCO-Keypoints/keypoint_rcnn_R_101_FPN_3x.yaml","pretrained_h36m_detectron_coco.bin")
             logger.info(f"Successfully processed video: {input_path}")
             return True
         except Exception as e:
@@ -89,29 +95,31 @@ class VideoProcessingService:
             video_key = message_body['video_key']
             
             # Create temporary directories for processing
-            with tempfile.TemporaryDirectory() as temp_dir:
-                input_path = os.path.join(temp_dir, 'input.mp4')
-                output_dir = os.path.join(temp_dir, 'output')
-                os.makedirs(output_dir, exist_ok=True)
+            os.makedirs('inputs', exist_ok=True)
+            input_path = os.path.join('inputs',video_key)
+            output_dir = os.path.join('output')
+            # print("inputinputinput:",input_path)
+            # print("outputoutputoutput",output_dir)
+            os.makedirs(output_dir, exist_ok=True)
 
-                # Download video from S3
-                if not self.download_from_s3(self.input_bucket, video_key, input_path):
-                    return False
+            # Download video from S3
+            if not self.download_from_s3(self.input_bucket, video_key, input_path):
+                return False
 
-                # Process video
-                if not self.process_video(input_path, output_dir):
-                    return False
+            # Process video
+            if not self.process_video(input_path, output_dir):
+                return False
 
-                # Upload results to S3
-                output_prefix = f"processed/{os.path.splitext(video_key)[0]}"
-                for root, _, files in os.walk(output_dir):
-                    for file in files:
-                        local_file_path = os.path.join(root, file)
-                        s3_key = f"{output_prefix}/{file}"
-                        if not self.upload_to_s3(local_file_path, self.output_bucket, s3_key):
-                            return False
+            # Upload results to S3
+            output_prefix = f"{os.path.splitext(video_key)[0]}"
+            for root, _, files in os.walk(output_dir):
+                for file in files:
+                    local_file_path = os.path.join(root, file)
+                    s3_key = f"{output_prefix}/{file}"
+                    if not self.upload_to_s3(local_file_path, self.output_bucket, s3_key):
+                        return False
 
-                return True
+            return True
         except Exception as e:
             logger.error(f"Error processing message: {e}")
             return False
@@ -160,7 +168,6 @@ class VideoProcessingService:
             except Exception as e:
                 logger.error(f"Error in main loop: {e}")
                 # Add a small delay before retrying to prevent tight error loops
-                time.sleep(1)
 
     def shutdown(self):
         """Graceful shutdown handler"""
@@ -169,12 +176,4 @@ class VideoProcessingService:
 
 if __name__ == "__main__":
     service = VideoProcessingService()
-    
-    # Set up signal handlers for graceful shutdown
-    def signal_handler(signum, frame):
-        service.shutdown()
-    
-    signal.signal(signal.SIGTERM, signal_handler)
-    signal.signal(signal.SIGINT, signal_handler)
-    
     service.run()
