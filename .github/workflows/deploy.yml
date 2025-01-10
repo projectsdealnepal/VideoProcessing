@@ -26,9 +26,11 @@ jobs:
     # Step 3: Build and Tag Docker Image
     - name: Build and Tag Docker Image
       run: |
-        IMAGE_TAG=$(date +%Y%m%d%H%M%S)
-        echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
+        IMAGE_TAG=$(date +%Y%m%d%H%M%S)  # Set unique image tag
+        echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV  # Save IMAGE_TAG for later use
+        # Build the Docker image with the tag
         docker build -t ${{ secrets.AWS_ECR_REPOSITORY }}:${{ env.IMAGE_TAG }} .
+        # Tag the image for ECR
         docker tag ${{ secrets.AWS_ECR_REPOSITORY }}:${{ env.IMAGE_TAG }} \
           ${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.AWS_ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
 
@@ -37,7 +39,7 @@ jobs:
       run: |
         docker push ${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.AWS_ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
 
-    # Step 5: Update ECS Service with the new image tag (no new task definition)
+    # Step 5: Update ECS Service with new image tag (no new task definition)
     - name: Update ECS Service with new image
       run: |
         # Update ECS service with the new image tag in the existing task definition
@@ -45,10 +47,9 @@ jobs:
           --cluster ${{ secrets.AWS_ECS_CLUSTER_NAME }} \
           --service ${{ secrets.AWS_ECS_SERVICE_NAME }} \
           --force-new-deployment \
-          --region ${{ secrets.AWS_REGION }} \
-          --image ${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.AWS_ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+          --region ${{ secrets.AWS_REGION }}
 
-    # Step 6: Run the container with specific runtime options
+    # Step 6: Run the container with specific runtime options on ECS
     - name: Run Docker container with specific runtime options on ECS
       run: |
         # Run ECS task with NVIDIA runtime and GPUs enabled
