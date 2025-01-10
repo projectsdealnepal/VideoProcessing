@@ -1,5 +1,29 @@
 import numpy as np
+
+import numpy as np
+from scipy.spatial.transform import Rotation
+
+def calculate_full_angle(point1, point2, point3, up_vector=np.array([0,1,0])):
+    # Create vectors
+    v1 = point2 - point1  # base vector
+    v2 = point3 - point2  # moving vector
     
+    # Create rotation matrix from these vectors
+    # This will account for the full rotation
+    rotation_matrix = np.zeros((3,3))
+    rotation_matrix[:,0] = v1 / np.linalg.norm(v1)
+    rotation_matrix[:,1] = up_vector
+    rotation_matrix[:,2] = np.cross(rotation_matrix[:,0], rotation_matrix[:,1])
+    
+    # Convert to euler angles
+    r = Rotation.from_matrix(rotation_matrix)
+    euler_angles = r.as_euler('xyz', degrees=True)
+    
+    # The relevant angle will be one of these euler angles
+    # depending on your coordinate system
+    return euler_angles[1]  # Usually Y-axis for flexion/extension
+
+
 def calculate_angle(p1, p2, p3):
     # Create vectors
     vector1 = np.array(p1) - np.array(p2)  

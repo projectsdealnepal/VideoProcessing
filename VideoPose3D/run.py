@@ -785,15 +785,16 @@ if args.render:
 
 
         # Try changing x and y coordinates of site.
-        nf_offset = None 
-        neck_flexion = float(180-utils.calculate_angle(mid_spine, neck_base, site))  # DONE
-        
+        nf_offset = 8
+        neck_flexion = 180-float(utils.calculate_angle(pelvis, mid_shoulder, site))-nf_offset  # DONE
+        # neck_flexion = float(utils.calculate_full_angle(mid_spine, neck_base, site))
+        # print((neck_flexion, neck_flexion2))
         # vector approach
         neck_sb = float(abs(utils.vector_side_angle(Lshoulder, Rshoulder, mid_shoulder, site)-90)/2)
         neck_rot = float(abs(utils.vector_side_angle(Lshoulder, Rshoulder, mid_shoulder, head)-90)/1.7)
 
-        tf_offset = None
-        trunk_flexion = 180-utils.trunk_flexion(pelvis,mid_spine)  # DONE w/o extension. 
+        tf_offset = 5
+        trunk_flexion = 180-utils.trunk_flexion(pelvis,mid_shoulder)-tf_offset  # DONE w/o extension. 
         # trunk_sb = float(abs(utils.calculate_side_angle(pelvis,neck_base,RHip,LHip))) # NOT GOOD
 
         # vector approach
@@ -823,8 +824,11 @@ if args.render:
         else:
             Labduction=False
 
+        # Wrist angles. 
+
+
         reba_analysis_results.append({
-                "frame": frame_idx,
+                "frame": frame_idx+1,
                 "angles": {
                     "neck": {
                         "angle": neck_flexion,

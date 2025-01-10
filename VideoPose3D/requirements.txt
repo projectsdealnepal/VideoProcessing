@@ -3,8 +3,6 @@
 #
 # pip-compile test_req.in
 
---extra-index-url https://download.pytorch.org/whl/cu118
-
 # Core dependencies
 filelock==3.16.1         # via torch
 fsspec==2024.12.0        # via torch
@@ -15,10 +13,6 @@ networkx==3.2.1         # via torch
 numpy==2.0.2            # via torchvision
 pillow==11.1.0          # via torchvision
 sympy==1.13.1           # via torch
-torch==2.5.1+cu118      # via -r test_req.in, torchaudio, torchvision
-torchaudio==2.5.1+cu118 # via -r test_req.in
-torchvision==0.20.1+cu118 # via -r test_req.in
-typing-extensions==4.12.2 # via torch
-
+typing-extensions==4.12.2 # via torch  # via sagemaker
 # System dependencies (to be installed separately via apt)
 # sudo apt install ffmpeg
