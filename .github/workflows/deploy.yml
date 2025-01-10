@@ -16,7 +16,6 @@ jobs:
 
     # Step 2: Login to AWS ECR
     - name: Login to AWS ECR
-      id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2
       env:
         AWS_REGION: ${{ secrets.AWS_REGION }}
@@ -33,10 +32,6 @@ jobs:
         # Ensure the image tag uses the proper repository and tag format
         docker build -t "${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.AWS_ECR_REPOSITORY }}:${IMAGE_TAG}" .
 
-        # Tag the image for ECR (if required for additional tagging)
-        docker tag "${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.AWS_ECR_REPOSITORY }}:${IMAGE_TAG}" \
-          "${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.AWS_ECR_REPOSITORY }}:${IMAGE_TAG}"
-
     # Step 4: Push Docker Image to ECR
     - name: Push Docker Image to ECR
       run: |
@@ -45,20 +40,8 @@ jobs:
     # Step 5: Update ECS Service with new image tag (no new task definition)
     - name: Update ECS Service with new image
       run: |
-        # Update ECS service with the new image tag in the existing task definition
         aws ecs update-service \
           --cluster ${{ secrets.AWS_ECS_CLUSTER_NAME }} \
           --service ${{ secrets.AWS_ECS_SERVICE_NAME }} \
           --force-new-deployment \
-          --region ${{ secrets.AWS_REGION }}
-
-    # Step 6: Run the container with specific runtime options on ECS
-    - name: Run Docker container with specific runtime options on ECS
-      run: |
-        # Run ECS task with NVIDIA runtime and GPUs enabled
-        aws ecs run-task \
-          --cluster ${{ secrets.AWS_ECS_CLUSTER_NAME }} \
-          --launch-type EC2 \
-          --task-definition ${{ secrets.AWS_ECS_TASK_DEFINITION }} \
-          --overrides '{"containerOverrides":[{"name":"${{ secrets.AWS_ECS_CONTAINER_NAME }}","command":["/bin/bash","-c","\"docker run --name testing --runtime=nvidia --gpus all -it videopose3d-local:${IMAGE_TAG}\""]}]}'
           --region ${{ secrets.AWS_REGION }}
