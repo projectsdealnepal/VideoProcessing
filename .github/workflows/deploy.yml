@@ -32,7 +32,9 @@ jobs:
     # Step 4: Push Docker Image to ECR
     - name: Push Docker Image to ECR
       run: |
+        # Correct tag format for ECR
         docker tag videopose3d-test:latest "${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.AWS_ECR_REPOSITORY }}:latest"
+        # Push the image to ECR
         docker push "${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.AWS_ECR_REPOSITORY }}:latest"
 
     # Step 5: Update ECS Service with new image (no new task definition)
