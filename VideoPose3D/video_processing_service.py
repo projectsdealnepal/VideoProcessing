@@ -65,6 +65,7 @@ class VideoProcessingService:
         try:
             self.s3.upload_file(local_path, bucket, key)
             logger.info(f"Uploaded {local_path} to {bucket}/{key}")
+            os.remove(local_path)
             return True
         except ClientError as e:
             logger.error(f"Error uploading to S3: {e}")
