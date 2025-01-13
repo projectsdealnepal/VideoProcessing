@@ -783,20 +783,29 @@ if args.render:
         mid_hip = (np.array(RHip) + np.array(LHip)) / 2
         perpendicular = np.array([0, 1, 0])
 
+        # print("Differences Neck Base:",np.array(mid_shoulder)-np.array(neck_base))
+        # print("Differences Pelvis:", np.array(pelvis)-np.array(mid_hip))
 
-        # Try changing x and y coordinates of site.
-        nf_offset = 8
-        neck_flexion = 180-float(utils.calculate_angle(pelvis, mid_shoulder, site))-nf_offset  # DONE
-        # neck_flexion = float(utils.calculate_full_angle(mid_spine, neck_base, site))
-        # print((neck_flexion, neck_flexion2))
+        # NECK.
+        # neck_flexion = float(utils.calculate_angle(pelvis, neck_base, site))
+        # if neck_flexion > 175:
+        #     neck_flexion = 175
+        # neck_flexion = 175-neck_flexion
+
+        neck_flexion = float(utils.calculate_angle(pelvis, neck_base, head))
+        neck_flexion = (145-neck_flexion)
+         
         # vector approach
         neck_sb = float(abs(utils.vector_side_angle(Lshoulder, Rshoulder, mid_shoulder, site)-90)/2)
-        neck_rot = float(abs(utils.vector_side_angle(Lshoulder, Rshoulder, mid_shoulder, head)-90)/1.7)
+        neck_rot = float(abs(utils.vector_side_angle(Lshoulder, Rshoulder, mid_shoulder, head)-90)/1.5)
+        if neck_sb >7:
+            neck_flexion = neck_flexion-neck_sb
+            neck_rot = abs(neck_rot-neck_sb)
 
+        # TRUNK.
         tf_offset = 5
         trunk_flexion = 180-utils.trunk_flexion(pelvis,mid_shoulder)-tf_offset  # DONE w/o extension. 
         # trunk_sb = float(abs(utils.calculate_side_angle(pelvis,neck_base,RHip,LHip))) # NOT GOOD
-
         # vector approach
         trunk_sb = float(abs(utils.vector_side_angle(LHip, RHip, mid_shoulder, mid_spine)-90)/2)
         trunk_rot = float(utils.trunk_axial_rotation(Rshoulder, Lshoulder, RHip, LHip)/2)
