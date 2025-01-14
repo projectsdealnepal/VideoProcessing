@@ -42,6 +42,7 @@ def process_video(video_path, output_dir, detectron_cfg, checkpoint):
         f"-crf 23 -c:a copy {temp_video_path}"
     )
     run_command(fps_command)
+    os.remove(video_path)
 
     # Set the final output video path in the output_videos directory
     final_output_video = os.path.join(output_videos_dir, f"{video_base_name}.mp4")
@@ -126,7 +127,7 @@ if __name__ == "__main__":
         help="Path to the Detectron configuration file."
     )
     parser.add_argument(
-        "--checkpoint", type=str, default="pretrained_h36m_detectron_coco.bin",
+        "--checkpoint", type=str, default="pretrained_243_h36m_detectron_coco_wtraj.bin",
         help="Path to the pretrained checkpoint file."
     )
     args = parser.parse_args()

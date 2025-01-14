@@ -1,7 +1,10 @@
 import numpy as np
-
-import numpy as np
-from scipy.spatial.transform import Rotation
+import requests
+import json
+import os
+from dotenv import load_dotenv
+load_dotenv()
+BASE_URL = os.environ['BASE_URL']
 
 def calculate_angle(p1, p2, p3):
     # Create vectors
@@ -73,3 +76,52 @@ def trunk_flexion(pelvis, mid_spine):
     vertical_vector = np.array([0, 1, 0])  # Y-axis as vertical
     # sagittal_projection = np.array([trunk_vector[0], trunk_vector[1], trunk_vector[2]])  # Y-Z plane
     return vector_angle(trunk_vector, vertical_vector)
+
+def points_to_angles(points_list):
+    """
+    Compute the angle between vectors formed by points.
+    """
+    # Ensure all points are numpy arrays of shape (2,)
+    try:
+        points_array = np.array([np.array(pt[:2], dtype=float) for pt in points_list])
+    except ValueError as e:
+        print(f"Error converting points: {e}")
+        return np.nan  # Return NaN on conversion error
+    
+    if len(points_list) == 3:  # For angle between vectors ba and bc
+        vector_u = points_array[0] - points_array[1]  # Vector ba
+        vector_v = points_array[2] - points_array[1]  # Vector bc
+        ang = np.arctan2(vector_u[1], vector_u[0]) - np.arctan2(vector_v[1], vector_v[0])
+    else:
+        return np.nan  # Invalid number of points
+    
+    ang_deg = np.degrees(ang)
+    return ang_deg if ang_deg >= 0 else ang_deg + 360  # Ensure positive angle
+
+
+def create_reba_analysis(video_uuid, json_data, file_path):
+
+    url = f"{BASE_URL}operation/reba/analysis/create/" 
+    headers = {
+        "Content-Type": "application/json",
+    }
+    data = {
+        "video_uuid": str(video_uuid),  # video_uuid is a string
+        "result": json_data,
+        "processed_file_path": str(file_path)
+    }
+
+    try:
+        response = requests.post(url, headers=headers, data=json.dumps(data))
+        print(response.text)
+        response.raise_for_status() 
+        
+        return response.json()  
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error calling REBA analysis API: {e}")
+        return None 
+
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON response: {e}")
+        return None

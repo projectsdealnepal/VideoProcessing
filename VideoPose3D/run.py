@@ -755,7 +755,9 @@ if args.render:
     "trunk_sb": [],
     "trunk_rot": [],
     'Rabduction': [],
-    'Labduction': []
+    'Labduction': [], 
+    'Right_Wrist': [],
+    'Left_Wrist': [],
     }
 
     reba_analysis_results = []
@@ -783,45 +785,47 @@ if args.render:
         mid_hip = (np.array(RHip) + np.array(LHip)) / 2
         perpendicular = np.array([0, 1, 0])
 
-        # print("Differences Neck Base:",np.array(mid_shoulder)-np.array(neck_base))
-        # print("Differences Pelvis:", np.array(pelvis)-np.array(mid_hip))
-
-        # NECK.
-        # neck_flexion = float(utils.calculate_angle(pelvis, neck_base, site))
-        # if neck_flexion > 175:
-        #     neck_flexion = 175
-        # neck_flexion = 175-neck_flexion
-
-        neck_flexion = float(utils.calculate_angle(pelvis, neck_base, head))
-        neck_flexion = (145-neck_flexion)
+        # Neck Flexion/ Extension
+        neck_flexion = float(145-utils.calculate_angle(pelvis, neck_base, head))
          
-        # vector approach
+        # Neck Sidebending: vector approach
         neck_sb = float(abs(utils.vector_side_angle(Lshoulder, Rshoulder, mid_shoulder, site)-90)/2)
+        
+        # Neck Rotation: vector approach
         neck_rot = float(abs(utils.vector_side_angle(Lshoulder, Rshoulder, mid_shoulder, head)-90)/1.5)
+        
+        # Adjustment in angles when sidebending and rotation.
         if neck_sb >7:
             neck_flexion = neck_flexion-neck_sb
             neck_rot = abs(neck_rot-neck_sb)
-
-        # TRUNK.
-        tf_offset = 5
-        trunk_flexion = 180-utils.trunk_flexion(pelvis,mid_shoulder)-tf_offset  # DONE w/o extension. 
-        # trunk_sb = float(abs(utils.calculate_side_angle(pelvis,neck_base,RHip,LHip))) # NOT GOOD
-        # vector approach
+        if neck_rot > 10:
+            neck_flexion = neck_flexion-neck_rot
+        
+        # Trunk Flexion.
+        trunk_flexion = 170-utils.trunk_flexion(pelvis,mid_shoulder)  # DONE w/o extension. 
+        
+        # Trunk Sidebending: vector approach
         trunk_sb = float(abs(utils.vector_side_angle(LHip, RHip, mid_shoulder, mid_spine)-90)/2)
+        
+        # Trunk Rotation: vector approach
         trunk_rot = float(utils.trunk_axial_rotation(Rshoulder, Lshoulder, RHip, LHip)/2)
 
-        knee_offset = 10
+        # Leg Angle
+        knee_offset = 0
         Rknee_angle = float(abs(180-utils.calculate_angle(RHip, Rknee, Rfoot)-knee_offset))  # done
         Lknee_angle = float(abs(180-utils.calculate_angle(LHip, Lknee, Lfoot)-knee_offset)) # done
 
+        # Lower Arm Angle
         elbow_offset = 0
         Relbow_angle = float(abs(180-utils.calculate_angle(Rshoulder, Relbow, Rwrist)) ) # done
         Lelbow_angle = float(abs(180-utils.calculate_angle(Lshoulder, Lelbow, Lwrist))) # done
 
-        upper_arm_offset = 10
+        # Upper Arm Angle
+        upper_arm_offset = 0
         RUpperarm_angle = float(utils.calculate_angle(RHip,Rshoulder, Relbow)-upper_arm_offset) # Done needs testing
         LUpperarm_angle = float(utils.calculate_angle(LHip,Lshoulder, Lelbow)-upper_arm_offset) #Done needs testing
 
+        # Abduction Detection.
         Rabduction= utils.calculate_angle(Lshoulder,Rshoulder,  Relbow) # DONE
         Labduction= utils.calculate_angle( Rshoulder,Lshoulder, Lelbow) # DONE 
         if Rabduction>145:
@@ -832,9 +836,6 @@ if args.render:
             Labduction=True
         else:
             Labduction=False
-
-        # Wrist angles. 
-
 
         reba_analysis_results.append({
                 "frame": frame_idx+1,
@@ -914,16 +915,19 @@ if args.render:
     import json
     from common.visualization import get_fps
     fps = get_fps(args.viz_video)
-
-
+    video_id = os.path.basename(args.viz_video).split('.')[0]
     final_output = {
         "video_metadata": {
-            "video_id": None,
+            "video_id": str(video_id),
             "frame_rate": fps, #fps_take(),
             "total_duration_seconds":  prediction.shape[0] / fps,
         },
         "reba_angles": reba_analysis_results
     }
+
+    with open("final_output.json", "w") as file:
+        json.dump(final_output, file, indent=4)
+    
     json_directory = f'{args.output_dir}/json_data'
     os.makedirs(json_directory, exist_ok=True)
     json_file_name = os.path.join(f'{args.output_dir}/json_data/{os.path.splitext(os.path.basename(args.viz_subject))[0]}')
@@ -969,7 +973,7 @@ if args.render:
         
         input_keypoints = image_coordinates(input_keypoints[..., :2], w=cam['res_w'], h=cam['res_h'])
         
-        from common.visualization import render_animation
+        from common.visualization import render_animation, render_animation2
 # ------------------------------------------------------------------------------------------------------------------------------        
         
         render_animation(input_keypoints, keypoints_metadata, anim_output,

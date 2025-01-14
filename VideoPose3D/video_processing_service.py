@@ -7,8 +7,8 @@ import subprocess
 import tempfile
 import sys
 from pathlib import Path
+import utils
 from dotenv import load_dotenv
-
 load_dotenv()
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -47,6 +47,8 @@ class VideoProcessingService:
     def download_from_s3(self, bucket, key, local_path):
         """Download file from S3"""
         try:
+            print("Bucket", bucket)
+            print("Key", key)
             self.s3.download_file(bucket, key, local_path)
             logger.info(f"Downloaded {key} from {bucket} to {local_path}")
             return True
@@ -74,7 +76,7 @@ class VideoProcessingService:
                 input_path,
                 '--output-dir', output_dir
             ]
-            print(input_path, output_dir)
+            # print(input_path, output_dir)
             # Call the main function of process_video
             self.process_video_module.process_video(input_path, output_dir, "COCO-Keypoints/keypoint_rcnn_R_101_FPN_3x.yaml","pretrained_h36m_detectron_coco.bin")
             logger.info(f"Successfully processed video: {input_path}")
@@ -88,11 +90,12 @@ class VideoProcessingService:
         try:
             message_body = json.loads(message['Body'])
             video_key = message_body['video_key']
+            # print("video_key:",video_key)
             
-            # Create temporary directories for processing
-            os.makedirs('inputs', exist_ok=True)
             input_path = os.path.join('inputs',video_key)
             output_dir = os.path.join('output')
+             # Create temporary directories for processing
+            os.makedirs(os.path.dirname(input_path), exist_ok=True)
             # print("inputinputinput:",input_path)
             # print("outputoutputoutput",output_dir)
             os.makedirs(output_dir, exist_ok=True)
@@ -104,17 +107,28 @@ class VideoProcessingService:
             # Process video
             if not self.process_video(input_path, output_dir):
                 return False
-
             # Upload results to S3
             output_prefix = f"{os.path.splitext(video_key)[0]}"
+            
+            # print(output_prefix)
             for root, _, files in os.walk(output_dir):
                 for file in files:
                     local_file_path = os.path.join(root, file)
                     s3_key = f"{output_prefix}/{file}"
                     if not self.upload_to_s3(local_file_path, self.output_bucket, s3_key):
                         return False
+                    file_pth = f"{os.path.splitext(local_file_path)[1]}"
+                    # print("file_pth:", file_pth)
+                    if '.mp4' in file_pth:
+                        with open("final_output.json", "r") as f:
+                            json_data = json.load(f)
+                            uuid = json_data['video_metadata']['video_id']
+
+                        resp = utils.create_reba_analysis(uuid, json_data, s3_key) 
+                        print(resp)
 
             return True
+        
         except Exception as e:
             logger.error(f"Error processing message: {e}")
             return False
