@@ -3,3 +3,5 @@ inputs
 output
 outputs
 .env
+final_output.json
+pretrained_h36m_detectron_coco
