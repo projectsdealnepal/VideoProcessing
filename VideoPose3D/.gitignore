@@ -5,3 +5,5 @@ outputs
 .env
 final_output.json
 pretrained_h36m_detectron_coco
+pretrained_h36m_cpn
+pretrained_243_h36m_detectron_coco_wtraj

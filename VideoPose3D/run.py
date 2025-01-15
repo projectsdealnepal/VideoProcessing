@@ -802,8 +802,12 @@ if args.render:
             neck_flexion = neck_flexion-(neck_rot/1.5)
         
         # Trunk Flexion.
-        trunk_flexion = 170-utils.trunk_flexion(pelvis,mid_shoulder)  # DONE w/o extension. 
-        
+        trunk_flexion = utils.trunk_flexion(pelvis,neck_base)  # DONE w/o extension. 
+        if trunk_flexion>175:
+            trunk_flexion=175
+        trunk_flexion = 175-trunk_flexion
+        if trunk_flexion<18:
+            trunk_flexion=trunk_flexion/2
         # Trunk Sidebending: vector approach
         trunk_sb = float(abs(utils.vector_side_angle(LHip, RHip, mid_shoulder, mid_spine)-90)/2)
         
@@ -812,8 +816,12 @@ if args.render:
 
         # Leg Angle
         knee_offset = 0
-        Rknee_angle = float(abs(180-utils.calculate_angle(RHip, Rknee, Rfoot)-knee_offset))  # done
-        Lknee_angle = float(abs(180-utils.calculate_angle(LHip, Lknee, Lfoot)-knee_offset)) # done
+        Rknee_angle = float(abs(180-utils.calculate_angle(RHip, Rknee, Rfoot))) 
+        Lknee_angle = float(abs(180-utils.calculate_angle(LHip, Lknee, Lfoot))) 
+        if Rknee_angle<25:
+            Rknee_angle = Rknee_angle/2.5
+        if Lknee_angle<25:
+            Lknee_angle = Lknee_angle/2.5
 
         # Lower Arm Angle
         elbow_offset = 0

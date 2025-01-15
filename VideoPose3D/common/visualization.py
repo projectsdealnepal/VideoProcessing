@@ -176,7 +176,7 @@ def render_animation2(keypoints, keypoints_metadata, poses, skeleton, fps, bitra
         # Update 2D poses
         joints_right_2d = keypoints_metadata['keypoints_symmetry'][1]
         colors_2d = np.full(keypoints.shape[1], 'black')
-        colors_2d[joints_right_2d] = 'black'
+        colors_2d[joints_right_2d] = 'red'
         if not initialized:
             image = ax_in.imshow(all_frames[i], aspect='equal')
             text_left_knee = ax_in.text(
@@ -403,6 +403,11 @@ def render_animation(keypoints, keypoints_metadata, poses, skeleton, fps, bitrat
         x_positions = [0.05, 0.7]  # Start positions for left and right columns
         base_y = 0.8  # Start from top
         y_spacing = 0.12  # Increased spacing between lines
+
+        # Update 2D poses
+        joints_right_2d = keypoints_metadata['keypoints_symmetry'][1]
+        colors_2d = np.full(keypoints.shape[1], 'black')
+        colors_2d[joints_right_2d] = 'red'
 
         if not initialized:
             # Initialize video display

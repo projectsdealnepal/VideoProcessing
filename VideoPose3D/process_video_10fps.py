@@ -92,7 +92,7 @@ def process_video(video_path, output_dir, detectron_cfg, checkpoint):
         f"--viz-action custom --viz-camera 0 "
         f"--viz-video {temp_video_path} "
         f"--viz-output {final_output_video} "
-        f"--viz-size 6 "
+        f"--viz-size 8 "
         f"--output-dir {output_dir} "
     )
     
@@ -127,7 +127,7 @@ if __name__ == "__main__":
         help="Path to the Detectron configuration file."
     )
     parser.add_argument(
-        "--checkpoint", type=str, default="pretrained_243_h36m_detectron_coco_wtraj.bin",
+        "--checkpoint", type=str, default="pretrained_h36m_detectron_coco.bin",
         help="Path to the pretrained checkpoint file."
     )
     args = parser.parse_args()
