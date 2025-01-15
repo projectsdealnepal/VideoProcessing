@@ -3,6 +3,9 @@ import requests
 import json
 import os
 from dotenv import load_dotenv
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 load_dotenv()
 BASE_URL = os.environ['BASE_URL']
 
@@ -113,7 +116,7 @@ def create_reba_analysis(video_uuid, json_data, file_path):
 
     try:
         response = requests.post(url, headers=headers, data=json.dumps(data))
-        print(response.text)
+        logger.error(response.text)
         response.raise_for_status() 
         
         return response.json()  

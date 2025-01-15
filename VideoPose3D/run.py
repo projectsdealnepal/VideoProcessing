@@ -856,7 +856,7 @@ if args.render:
                             "one_leg_raised": None
                         },
                         "left_leg": {
-                            "Knee_angle":Lknee_angle,
+                            "knee_angle":Lknee_angle,
                             "one_leg_raised":None
                     }
                     },

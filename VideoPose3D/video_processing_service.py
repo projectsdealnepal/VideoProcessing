@@ -125,7 +125,7 @@ class VideoProcessingService:
                             uuid = json_data['video_metadata']['video_id']
 
                         resp = utils.create_reba_analysis(uuid, json_data, s3_key) 
-                        print(resp)
+                        logger.error(resp)
 
             return True
         
