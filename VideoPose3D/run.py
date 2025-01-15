@@ -795,11 +795,11 @@ if args.render:
         neck_rot = float(abs(utils.vector_side_angle(Lshoulder, Rshoulder, mid_shoulder, head)-90)/1.5)
         
         # Adjustment in angles when sidebending and rotation.
-        if neck_sb >7:
+        if neck_sb >8:
             neck_flexion = neck_flexion-neck_sb
             neck_rot = abs(neck_rot-neck_sb)
         if neck_rot > 10:
-            neck_flexion = neck_flexion-neck_rot
+            neck_flexion = neck_flexion-(neck_rot/1.5)
         
         # Trunk Flexion.
         trunk_flexion = 170-utils.trunk_flexion(pelvis,mid_shoulder)  # DONE w/o extension. 
@@ -808,7 +808,7 @@ if args.render:
         trunk_sb = float(abs(utils.vector_side_angle(LHip, RHip, mid_shoulder, mid_spine)-90)/2)
         
         # Trunk Rotation: vector approach
-        trunk_rot = float(utils.trunk_axial_rotation(Rshoulder, Lshoulder, RHip, LHip)/2)
+        trunk_rot = float(utils.trunk_axial_rotation(Rshoulder, Lshoulder, RHip, LHip)/1.5)
 
         # Leg Angle
         knee_offset = 0
